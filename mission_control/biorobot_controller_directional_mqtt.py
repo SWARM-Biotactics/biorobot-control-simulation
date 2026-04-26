@@ -391,7 +391,7 @@ def compass_stop_received(current_heading: float) -> None:
     if abs(angle_diff) > ANGLE_TOLERANCE_BROAD:
         channel = CHANNEL_RIGHT_ANTENNA if angle_diff < 0 else CHANNEL_LEFT_ANTENNA
         amplitude_factor = adjust_amplitude(history, channel, target_yaw, 300.0) or 0.3
-        send_command(channel, 40, amplitude_factor, 500)
+        # send_command(channel, 40, amplitude_factor, 500)
 
     elif abs(angle_diff) > ANGLE_TOLERANCE:
         channel = CHANNEL_RIGHT_CERCUS if angle_diff < 0 else CHANNEL_LEFT_CERCUS
