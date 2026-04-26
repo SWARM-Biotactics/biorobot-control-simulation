@@ -25,22 +25,22 @@ SIM_STATE_TOPIC = os.getenv("SIM_STATE_TOPIC", SIM_STATE_TOPIC_DEFAULT)
 SIM_LOOP_HZ = float(os.getenv("SIM_LOOP_HZ", "20"))
 CONTROL_LOOP_HZ = float(os.getenv("CONTROL_LOOP_HZ", "8"))
 
-WORLD_MIN_X = float(os.getenv("WORLD_MIN_X", "0"))
-WORLD_MAX_X = float(os.getenv("WORLD_MAX_X", "10000"))
-WORLD_MIN_Y = float(os.getenv("WORLD_MIN_Y", "0"))
-WORLD_MAX_Y = float(os.getenv("WORLD_MAX_Y", "10000"))
+WORLD_MIN_X = float(os.getenv("WORLD_MIN_X", "800"))
+WORLD_MAX_X = float(os.getenv("WORLD_MAX_X", "9200"))
+WORLD_MIN_Y = float(os.getenv("WORLD_MIN_Y", "800"))
+WORLD_MAX_Y = float(os.getenv("WORLD_MAX_Y", "9200"))
 
-DEFAULT_SPEED = float(os.getenv("SIM_DEFAULT_SPEED", "260"))
-TURN_RATE = float(os.getenv("SIM_TURN_RATE_DEG", "120"))
-DRAG = float(os.getenv("SIM_DRAG", "0.96"))
-JITTER = float(os.getenv("SIM_JITTER", "2"))
+DEFAULT_SPEED = float(os.getenv("SIM_DEFAULT_SPEED", "280"))
+TURN_RATE = float(os.getenv("SIM_TURN_RATE_DEG", "145"))
+DRAG = float(os.getenv("SIM_DRAG", "0.99"))
+JITTER = float(os.getenv("SIM_JITTER", "0.3"))
 
-ACTION_FORWARD_SECONDS = float(os.getenv("ACTION_FORWARD_SECONDS", "0.9"))
+ACTION_FORWARD_SECONDS = float(os.getenv("ACTION_FORWARD_SECONDS", "1.0"))
 ACTION_TURN_SECONDS = float(os.getenv("ACTION_TURN_SECONDS", "0.5"))
 
-MIN_TIME_BETWEEN_SIGNALS = float(os.getenv("MIN_TIME_BETWEEN_SIGNALS", "0.35"))
-ANGLE_TOLERANCE = float(os.getenv("ANGLE_TOLERANCE", "30"))
-ANGLE_TOLERANCE_BROAD = float(os.getenv("ANGLE_TOLERANCE_BROAD", "60"))
+MIN_TIME_BETWEEN_SIGNALS = float(os.getenv("MIN_TIME_BETWEEN_SIGNALS", "0.25"))
+ANGLE_TOLERANCE = float(os.getenv("ANGLE_TOLERANCE", "18"))
+ANGLE_TOLERANCE_BROAD = float(os.getenv("ANGLE_TOLERANCE_BROAD", "45"))
 KEEP_MOVING_ENABLED = os.getenv("KEEP_MOVING_ENABLED", "true").lower() == "true"
 
 CHANNEL_BOTH_CERCI = 0
@@ -163,7 +163,14 @@ def rebuild_states_from_config() -> None:
     log(f"loaded {len(robot_states)} robots from config -> {summary}")
 
 
-def apply_signal_to_robot(state: RobotState, channel: int, amplitude_factor: float, frequency: float, duration_ms: float, source: str) -> None:
+def apply_signal_to_robot(
+    state: RobotState,
+    channel: int,
+    amplitude_factor: float,
+    frequency: float,
+    duration_ms: float,
+    source: str,
+) -> None:
     now = time.time()
     duration_s = max(0.05, float(duration_ms) / 1000.0)
 
@@ -175,30 +182,54 @@ def apply_signal_to_robot(state: RobotState, channel: int, amplitude_factor: flo
         state.intent.turn_dir = 1
         state.intent.turn_until = now + duration_s
         state.intent.source = source
-        log(f"[controller] {time.strftime('%H:%M:%S')} INFO: Sending signal LEFT_ANTENNA: {frequency}, {abs_amp}, {int(duration_ms)} to backpack sim with marker {state.marker_id}")
+        log(
+            f"[controller] {time.strftime('%H:%M:%S')} INFO: "
+            f"Sending signal LEFT_ANTENNA: {frequency}, {abs_amp}, {int(duration_ms)} "
+            f"to backpack sim with marker {state.marker_id}"
+        )
     elif channel == CHANNEL_RIGHT_ANTENNA:
         state.intent.turn_dir = -1
         state.intent.turn_until = now + duration_s
         state.intent.source = source
-        log(f"[controller] {time.strftime('%H:%M:%S')} INFO: Sending signal RIGHT_ANTENNA: {frequency}, {abs_amp}, {int(duration_ms)} to backpack sim with marker {state.marker_id}")
+        log(
+            f"[controller] {time.strftime('%H:%M:%S')} INFO: "
+            f"Sending signal RIGHT_ANTENNA: {frequency}, {abs_amp}, {int(duration_ms)} "
+            f"to backpack sim with marker {state.marker_id}"
+        )
     elif channel == CHANNEL_BOTH_CERCI:
         state.intent.forward_until = now + duration_s
         state.intent.source = source
-        log(f"[controller] {time.strftime('%H:%M:%S')} INFO: Sending signal BOTH_CERCI: {frequency}, {abs_amp}, {int(duration_ms)} to backpack sim with marker {state.marker_id}")
+        log(
+            f"[controller] {time.strftime('%H:%M:%S')} INFO: "
+            f"Sending signal BOTH_CERCI: {frequency}, {abs_amp}, {int(duration_ms)} "
+            f"to backpack sim with marker {state.marker_id}"
+        )
     elif channel == CHANNEL_LEFT_CERCUS:
         state.intent.turn_dir = 1
         state.intent.turn_until = now + duration_s * 0.7
         state.intent.source = source
-        log(f"[controller] {time.strftime('%H:%M:%S')} INFO: Sending signal LEFT_CERCUS: {frequency}, {abs_amp}, {int(duration_ms)} to backpack sim with marker {state.marker_id}")
+        log(
+            f"[controller] {time.strftime('%H:%M:%S')} INFO: "
+            f"Sending signal LEFT_CERCUS: {frequency}, {abs_amp}, {int(duration_ms)} "
+            f"to backpack sim with marker {state.marker_id}"
+        )
     elif channel == CHANNEL_RIGHT_CERCUS:
         state.intent.turn_dir = -1
         state.intent.turn_until = now + duration_s * 0.7
         state.intent.source = source
-        log(f"[controller] {time.strftime('%H:%M:%S')} INFO: Sending signal RIGHT_CERCUS: {frequency}, {abs_amp}, {int(duration_ms)} to backpack sim with marker {state.marker_id}")
+        log(
+            f"[controller] {time.strftime('%H:%M:%S')} INFO: "
+            f"Sending signal RIGHT_CERCUS: {frequency}, {abs_amp}, {int(duration_ms)} "
+            f"to backpack sim with marker {state.marker_id}"
+        )
     elif channel == CHANNEL_BOTH_ANTENNAE:
         state.intent.forward_until = now + duration_s
         state.intent.source = source
-        log(f"[controller] {time.strftime('%H:%M:%S')} INFO: Sending signal BOTH_ANTENNAE: {frequency}, {abs_amp}, {int(duration_ms)} to backpack sim with marker {state.marker_id}")
+        log(
+            f"[controller] {time.strftime('%H:%M:%S')} INFO: "
+            f"Sending signal BOTH_ANTENNAE: {frequency}, {abs_amp}, {int(duration_ms)} "
+            f"to backpack sim with marker {state.marker_id}"
+        )
 
 
 def handle_action(robot_uuid: str, payload: dict[str, Any]) -> None:
@@ -218,6 +249,11 @@ def handle_action(robot_uuid: str, payload: dict[str, Any]) -> None:
                 log(f"[actions] invalid target_heading payload for robot={state.robot_id}: {th!r}")
             return
 
+        if action == "ClearTarget":
+            state.target_heading = None
+            log(f"[actions] cleared target heading for robot={state.robot_id}")
+            return
+
         if action != "Signal":
             log(f"[actions] ignored unsupported action={action} robot={state.robot_id}")
             return
@@ -233,28 +269,18 @@ def handle_action(robot_uuid: str, payload: dict[str, Any]) -> None:
             f"f={frequency} durMs={duration_ms}"
         )
 
-        # Immediate manual response
+        # Manual button clicks should cause immediate motion only.
+        # They must NOT create a persistent autonomous target.
         apply_signal_to_robot(state, channel, amplitude_factor, frequency, duration_ms, source="manual")
 
-        # Also update desired heading so controller_loop can continue like original repo
-        if channel == CHANNEL_LEFT_ANTENNA:
-            state.target_heading = wrap_angle(state.heading + 35.0)
-            log(f"[actions] manual LEFT_ANTENNA -> target heading {state.target_heading:.2f} for {state.robot_id}")
-        elif channel == CHANNEL_RIGHT_ANTENNA:
-            state.target_heading = wrap_angle(state.heading - 35.0)
-            log(f"[actions] manual RIGHT_ANTENNA -> target heading {state.target_heading:.2f} for {state.robot_id}")
-        elif channel == CHANNEL_LEFT_CERCUS:
-            state.target_heading = wrap_angle(state.heading + 20.0)
-            log(f"[actions] manual LEFT_CERCUS -> target heading {state.target_heading:.2f} for {state.robot_id}")
-        elif channel == CHANNEL_RIGHT_CERCUS:
-            state.target_heading = wrap_angle(state.heading - 20.0)
-            log(f"[actions] manual RIGHT_CERCUS -> target heading {state.target_heading:.2f} for {state.robot_id}")
-        elif channel in (CHANNEL_BOTH_CERCI, CHANNEL_BOTH_ANTENNAE):
-            state.target_heading = wrap_angle(state.heading)
-            log(f"[actions] manual forward -> lock target heading {state.target_heading:.2f} for {state.robot_id}")
 
-
-def on_connect(client: mqtt.Client, userdata: Any, flags: dict, reason_code: Any, properties: Any = None) -> None:
+def on_connect(
+    client: mqtt.Client,
+    userdata: Any,
+    flags: dict,
+    reason_code: Any,
+    properties: Any = None,
+) -> None:
     log(f"connected to mqtt rc={reason_code}")
     client.subscribe(CONFIG_TOPIC)
     client.subscribe("actions/biorobot/+/execute")
@@ -311,25 +337,41 @@ def physics_loop() -> None:
                 state.x += state.vx * dt
                 state.y += state.vy * dt
 
+                hit_wall = False
+
                 if state.x < WORLD_MIN_X:
                     state.x = WORLD_MIN_X
-                    state.vx = abs(state.vx)
+                    state.vx = abs(state.vx) * 0.3
+                    hit_wall = True
                 elif state.x > WORLD_MAX_X:
                     state.x = WORLD_MAX_X
-                    state.vx = -abs(state.vx)
+                    state.vx = -abs(state.vx) * 0.3
+                    hit_wall = True
 
                 if state.y < WORLD_MIN_Y:
                     state.y = WORLD_MIN_Y
-                    state.vy = abs(state.vy)
+                    state.vy = abs(state.vy) * 0.3
+                    hit_wall = True
                 elif state.y > WORLD_MAX_Y:
                     state.y = WORLD_MAX_Y
-                    state.vy = -abs(state.vy)
+                    state.vy = -abs(state.vy) * 0.3
+                    hit_wall = True
+
+                if hit_wall:
+                    state.intent.forward_until = 0.0
+                    if state.target_heading is not None:
+                        state.target_heading = None
+                    log(
+                        f"[physics] wall hit robot={state.robot_id} "
+                        f"pos=({state.x:.1f},{state.y:.1f}) -> cleared target"
+                    )
 
                 speed = math.hypot(state.vx, state.vy)
                 state.moving = speed > 2.0
 
-                if speed > 1.0:
-                    state.heading = wrap_angle(math.degrees(math.atan2(state.vy, state.vx)))
+                if speed > 1.0 and state.intent.turn_dir == 0:
+                    velocity_heading = wrap_angle(math.degrees(math.atan2(state.vy, state.vx)))
+                    state.heading = wrap_angle(0.85 * state.heading + 0.15 * velocity_heading)
 
         time.sleep(dt)
 
@@ -373,7 +415,7 @@ def controller_loop() -> None:
                     channel = CHANNEL_RIGHT_CERCUS if angle_diff < 0 else CHANNEL_LEFT_CERCUS
                     apply_signal_to_robot(state, channel, 0.52, 40, 400, source="controller")
                 else:
-                    if KEEP_MOVING_ENABLED and not state.moving:
+                    if KEEP_MOVING_ENABLED and not state.moving and state.target_heading is not None:
                         apply_signal_to_robot(state, CHANNEL_BOTH_CERCI, 0.52, 40, 500, source="controller")
                         log("[controller] INFO: [movement] BOTH_CERCI nudge ampFactor=0.52 (movement=False, step-on-message)")
 
