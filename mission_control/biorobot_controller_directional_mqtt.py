@@ -391,12 +391,12 @@ def compass_stop_received(current_heading: float) -> None:
     if abs(angle_diff) > ANGLE_TOLERANCE_BROAD:
         channel = CHANNEL_RIGHT_ANTENNA if angle_diff < 0 else CHANNEL_LEFT_ANTENNA
         amplitude_factor = adjust_amplitude(history, channel, target_yaw, 300.0) or 0.3
-        # send_command(channel, 40, amplitude_factor, 500)
+        send_command(channel, 40, amplitude_factor, 500)
 
     elif abs(angle_diff) > ANGLE_TOLERANCE:
         channel = CHANNEL_RIGHT_CERCUS if angle_diff < 0 else CHANNEL_LEFT_CERCUS
         amplitude_factor = adjust_amplitude(history, channel, target_yaw, 300.0) or 0.3
-        #send_command(channel, 45, amplitude_factor, 500)
+        send_command(channel, 45, amplitude_factor, 500)
 
 def adjust_amplitude(history: BiorobotHistory, channel: int, target_yaw: float, window: float = 120.0) -> Optional[float]:
     last_signal = history.get_last_signal(channel, window=window)
