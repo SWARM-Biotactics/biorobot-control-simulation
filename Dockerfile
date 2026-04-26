@@ -7,10 +7,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY sim_control.py .
 COPY config_runtime.py .
-COPY mqtt_topics.py .
-COPY controller_history.py .
-COPY angles.py .
+COPY plant_model.py .
+COPY mission_control ./mission_control
+COPY entrypoints ./entrypoints
 
 ENV PYTHONUNBUFFERED=1
 
-CMD ["python", "sim_control.py"]
+CMD ["python", "entrypoints/run_plant.py"]
