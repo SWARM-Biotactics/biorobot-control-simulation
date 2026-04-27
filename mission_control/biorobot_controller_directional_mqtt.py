@@ -10,6 +10,7 @@ Biorobot Controller (MQTT-config only, telemetry via MQTT)
     sensors/{biorobot_uuid}/movement/{source}
 - Runs the 'directional' approach loop using telemetry queue
 """
+import os
 
 from __future__ import annotations
 
@@ -467,15 +468,46 @@ def main() -> None:
         sys.exit(1)
 
     # Optional broker switch
+        # MQTT broker selection
+    #
+    # In local simulation, always prefer container env vars so the controller
+    # stays on the Docker broker (mosquitto) instead of switching to any broker
+    # embedded in retained config from another environment.
+    env_mqtt_host = os.getenv("MQTT_HOST") or os.getenv("MQTT_BROKER")
+    env_mqtt_port_raw = os.getenv("MQTT_PORT")
+
     cfg_mqtt_ip = get_cfg("mqtt.ip", args.bootstrap_mqtt_host)
     cfg_mqtt_port = int(get_cfg("mqtt.port", args.bootstrap_mqtt_port))
-    if (cfg_mqtt_ip, cfg_mqtt_port) != (args.bootstrap_mqtt_host, args.bootstrap_mqtt_port):
-        try: mqtt.publish_log("Reconnecting MQTT publisher to configured broker")
-        except Exception: pass
-        try: mqtt.stop()
-        except Exception: pass
-        mqtt = MqttClient(biorobot_id=temp_id, broker_host=cfg_mqtt_ip, broker_port=cfg_mqtt_port)
-        mqtt.start(); mqtt._ensure_connected()
+
+    effective_mqtt_ip = env_mqtt_host if env_mqtt_host else cfg_mqtt_ip
+    effective_mqtt_port = int(env_mqtt_port_raw) if env_mqtt_port_raw else cfg_mqtt_port
+
+    log.info(
+        f"[mqtt] bootstrap broker={args.bootstrap_mqtt_host}:{args.bootstrap_mqtt_port} | "
+        f"config broker={cfg_mqtt_ip}:{cfg_mqtt_port} | "
+        f"effective broker={effective_mqtt_ip}:{effective_mqtt_port}"
+    )
+
+    if (effective_mqtt_ip, effective_mqtt_port) != (args.bootstrap_mqtt_host, args.bootstrap_mqtt_port):
+        try:
+            mqtt.publish_log(
+                f"Reconnecting MQTT publisher to effective broker {effective_mqtt_ip}:{effective_mqtt_port}"
+            )
+        except Exception:
+            pass
+
+        try:
+            mqtt.stop()
+        except Exception:
+            pass
+
+        mqtt = MqttClient(
+            biorobot_id=temp_id,
+            broker_host=effective_mqtt_ip,
+            broker_port=effective_mqtt_port,
+        )
+        mqtt.start()
+        mqtt._ensure_connected()
 
     # Subscribe for live config updates (set default on_message)
     def _on_config_update(client, userdata, msg):

@@ -16,5 +16,6 @@ COPY mission_control ./mission_control
 COPY entrypoints ./entrypoints
 
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
 
 CMD ["python", "entrypoints/run_plant.py"]
