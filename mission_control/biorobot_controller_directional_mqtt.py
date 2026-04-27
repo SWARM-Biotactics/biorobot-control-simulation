@@ -10,9 +10,9 @@ Biorobot Controller (MQTT-config only, telemetry via MQTT)
     sensors/{biorobot_uuid}/movement/{source}
 - Runs the 'directional' approach loop using telemetry queue
 """
-import os
 
 from __future__ import annotations
+import os
 
 import argparse
 import json
@@ -467,12 +467,10 @@ def main() -> None:
         log.error(f"Failed to parse initial config: {e}")
         sys.exit(1)
 
-    # Optional broker switch
-        # MQTT broker selection
+    # MQTT broker selection
     #
-    # In local simulation, always prefer container env vars so the controller
-    # stays on the Docker broker (mosquitto) instead of switching to any broker
-    # embedded in retained config from another environment.
+    # In local simulation, prefer container env vars so the controller stays on
+    # the Docker broker instead of switching to a broker embedded in retained config.
     env_mqtt_host = os.getenv("MQTT_HOST") or os.getenv("MQTT_BROKER")
     env_mqtt_port_raw = os.getenv("MQTT_PORT")
 
@@ -508,6 +506,7 @@ def main() -> None:
         )
         mqtt.start()
         mqtt._ensure_connected()
+
 
     # Subscribe for live config updates (set default on_message)
     def _on_config_update(client, userdata, msg):
