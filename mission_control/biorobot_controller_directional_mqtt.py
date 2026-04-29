@@ -12,7 +12,6 @@ Biorobot Controller (MQTT-config only, telemetry via MQTT)
 """
 
 from __future__ import annotations
-import os
 
 import argparse
 import json
@@ -397,7 +396,7 @@ def compass_stop_received(current_heading: float) -> None:
     elif abs(angle_diff) > ANGLE_TOLERANCE:
         channel = CHANNEL_RIGHT_CERCUS if angle_diff < 0 else CHANNEL_LEFT_CERCUS
         amplitude_factor = adjust_amplitude(history, channel, target_yaw, 300.0) or 0.3
-        send_command(channel, 45, amplitude_factor, 500)
+        #send_command(channel, 45, amplitude_factor, 500)
 
 def adjust_amplitude(history: BiorobotHistory, channel: int, target_yaw: float, window: float = 120.0) -> Optional[float]:
     last_signal = history.get_last_signal(channel, window=window)
@@ -467,46 +466,16 @@ def main() -> None:
         log.error(f"Failed to parse initial config: {e}")
         sys.exit(1)
 
-    # MQTT broker selection
-    #
-    # In local simulation, prefer container env vars so the controller stays on
-    # the Docker broker instead of switching to a broker embedded in retained config.
-    env_mqtt_host = os.getenv("MQTT_HOST") or os.getenv("MQTT_BROKER")
-    env_mqtt_port_raw = os.getenv("MQTT_PORT")
-
+    # Optional broker switch
     cfg_mqtt_ip = get_cfg("mqtt.ip", args.bootstrap_mqtt_host)
     cfg_mqtt_port = int(get_cfg("mqtt.port", args.bootstrap_mqtt_port))
-
-    effective_mqtt_ip = env_mqtt_host if env_mqtt_host else cfg_mqtt_ip
-    effective_mqtt_port = int(env_mqtt_port_raw) if env_mqtt_port_raw else cfg_mqtt_port
-
-    log.info(
-        f"[mqtt] bootstrap broker={args.bootstrap_mqtt_host}:{args.bootstrap_mqtt_port} | "
-        f"config broker={cfg_mqtt_ip}:{cfg_mqtt_port} | "
-        f"effective broker={effective_mqtt_ip}:{effective_mqtt_port}"
-    )
-
-    if (effective_mqtt_ip, effective_mqtt_port) != (args.bootstrap_mqtt_host, args.bootstrap_mqtt_port):
-        try:
-            mqtt.publish_log(
-                f"Reconnecting MQTT publisher to effective broker {effective_mqtt_ip}:{effective_mqtt_port}"
-            )
-        except Exception:
-            pass
-
-        try:
-            mqtt.stop()
-        except Exception:
-            pass
-
-        mqtt = MqttClient(
-            biorobot_id=temp_id,
-            broker_host=effective_mqtt_ip,
-            broker_port=effective_mqtt_port,
-        )
-        mqtt.start()
-        mqtt._ensure_connected()
-
+    if (cfg_mqtt_ip, cfg_mqtt_port) != (args.bootstrap_mqtt_host, args.bootstrap_mqtt_port):
+        try: mqtt.publish_log("Reconnecting MQTT publisher to configured broker")
+        except Exception: pass
+        try: mqtt.stop()
+        except Exception: pass
+        mqtt = MqttClient(biorobot_id=temp_id, broker_host=cfg_mqtt_ip, broker_port=cfg_mqtt_port)
+        mqtt.start(); mqtt._ensure_connected()
 
     # Subscribe for live config updates (set default on_message)
     def _on_config_update(client, userdata, msg):
