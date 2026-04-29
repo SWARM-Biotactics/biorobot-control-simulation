@@ -558,7 +558,7 @@ def main() -> None:
                 log.warning(f"[telemetry] position parse error: {e}")
 
         # Movement: {"timestamp":..., "moving": true|false} or {"movementState": 1|0}
-        elif msg.topic.startswith(f"sensors/{biorobot_uuid}/movement/"):
+        elif msg.topic.startswith(f"sensors/{biorobot_uuid}/movement/cameratracking"):
             try:
                 moving_bool = bool(payload.get("moving"))
                 telemetry_q.put(("movement", moving_bool))
