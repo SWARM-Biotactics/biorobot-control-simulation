@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 # --- Args ---
 ap = argparse.ArgumentParser("Biorobot Controller (MQTT-config only)")
 ap.add_argument("--biorobot-uuid", required=True, help="UUID of the biorobot to control (used to derive ip/port)")
-ap.add_argument("--bootstrap-mqtt-host", default="localhost", help="MQTT broker host for bootstrapping (config + retained state/progress)")
+ap.add_argument("--bootstrap-mqtt-host", default="10.0.100.150")
 ap.add_argument("--bootstrap-mqtt-port", type=int, default=1883)
 ap.add_argument("--bootstrap-config-topic", default="config")
 ap.add_argument("--bootstrap-timeout", type=float, default=5.0)
